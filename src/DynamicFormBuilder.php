@@ -46,9 +46,9 @@ class DynamicFormBuilder implements FormBuilderInterface, \IteratorAggregate
     private array $preSetDataDependencyData = [];
     private array $postSubmitDependencyData = [];
 
-    public function __construct(private FormBuilderInterface $builder)
+    public function __construct(private readonly FormBuilderInterface $builder)
     {
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
             $this->form = $event->getForm();
             $this->preSetDataDependencyData = [];
             $this->initializeListeners();
@@ -68,11 +68,11 @@ class DynamicFormBuilder implements FormBuilderInterface, \IteratorAggregate
             }
         }, 100);
 
-        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
             $this->postSubmitDependencyData = [];
         });
         // guarantee later than core ValidationListener
-        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
             $this->clearDataOnTransformationError($event);
         }, -1);
     }
@@ -172,8 +172,8 @@ class DynamicFormBuilder implements FormBuilderInterface, \IteratorAggregate
 
                 $registeredFields[] = $dependency;
 
-                $this->builder->get($dependency)->addEventListener(FormEvents::PRE_SET_DATA, [$this, 'storePreSetDataDependencyData']);
-                $this->builder->get($dependency)->addEventListener(FormEvents::POST_SUBMIT, [$this, 'storePostSubmitDependencyData']);
+                $this->builder->get($dependency)->addEventListener(FormEvents::PRE_SET_DATA, $this->storePreSetDataDependencyData(...));
+                $this->builder->get($dependency)->addEventListener(FormEvents::POST_SUBMIT, $this->storePostSubmitDependencyData(...));
             }
         }
     }
